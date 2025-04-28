@@ -25,15 +25,14 @@
         </div>
 
         <div class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle px-3" href="#" id="accountDropdown" role="button" 
+        <a class="nav-link dropdown-toggle px-3" href="#" id="accountDropdown" role="button" 
                data-bs-toggle="dropdown" aria-expanded="false">
-                <i class="fas fa-user"></i> 
-                Aina Ny Antsa Ratovonandrasana
-            </a>
+                <i class="fas fa-user"></i> {{ $userName }}
+            </a>    
             <ul class="dropdown-menu" aria-labelledby="accountDropdown">
                 <li><a class="dropdown-item" href="#">Profil</a></li>
                 <li><hr class="dropdown-divider"></li>
-                <form action="#" method="POST">
+                <form method="GET" action="{{ route('logout') }}">
                     @csrf
                     <li><button type="submit" class="dropdown-item">Déconnexion</button></li>
                 </form>
