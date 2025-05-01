@@ -29,4 +29,4 @@ class DashboardController extends Controller
 
         return view('tableau.index', compact('tickets'));
     }
-}
+}   
