@@ -250,59 +250,141 @@ class ErpController extends Controller
             return back()->with('error', 'Erreur lors de la récupération des éléments du devis.');
         }
     }
-    
-
     public function updateQuotation(Request $request, $supplier_id, $quotation_id)
     {
         try {
-            \Log::info('Received data:', $request->all());
+            Log::info('Received data for updateQuotation', [
+                'request_data' => $request->all(),
+                'supplier_id' => $supplier_id,
+                'quotation_id' => $quotation_id
+            ]);
     
+            if (!$request->has('items') || !is_array($request->input('items'))) {
+                return back()->with('error', 'Données de mise à jour invalides.');
+            }
+    
+            Log::info('Données des articles envoyées', ['items' => $request->input('items')]);
+    
+            // Vérifier l'état du devis
             $quotationResponse = $this->client->get("{$this->apiUrl}/api/resource/Supplier Quotation/{$quotation_id}", [
                 'headers' => $this->headers,
             ]);
-            $quotation = json_decode($quotationResponse->getBody(), true)['data'];
-            $items = $quotation['items'];
-            
-            $item_row = $request->input('item_row');
-            $new_rate = (float) $request->input('new_rate');
-            
-            $found = false;
-            foreach ($items as &$item) {
-                if ($item['name'] === $item_row) {
-                    $item['rate'] = $new_rate;
-                    $item['amount'] = $new_rate * $item['qty'];
-                    $found = true;
-                    break;
+    
+            $quotationData = json_decode($quotationResponse->getBody(), true)['data'];
+    
+            if ($quotationData['status'] !== 'Draft') {
+                return back()->with('error', 'Le devis doit être en état "Draft" pour pouvoir modifier les prix.');
+            }
+    
+            $updatedItems = [];
+            $errors = [];
+    
+            foreach ($request->input('items') as $index => $itemData) {
+                if (!isset($itemData['item_row']) || !isset($itemData['new_rate'])) {
+                    $errors[] = "Données manquantes pour l'article à l'index $index";
+                    continue;
+                }
+    
+                $item_id = $itemData['item_row'];
+                $new_rate = (float) $itemData['new_rate'];
+    
+                if ($new_rate <= 0) {
+                    $errors[] = "Le prix pour l'article {$item_id} doit être supérieur à 0.";
+                    continue;
+                }
+    
+                try {
+                    // Étape 1 : Récupérer les détails de Supplier Quotation Item pour obtenir l'item_code
+                    $itemResponse = $this->client->get("{$this->apiUrl}/api/resource/Supplier Quotation Item/{$item_id}", [
+                        'headers' => $this->headers,
+                    ]);
+    
+                    if ($itemResponse->getStatusCode() !== 200) {
+                        $errors[] = "Impossible de récupérer les détails de l'article {$item_id}: " . $itemResponse->getBody()->getContents();
+                        continue;
+                    }
+    
+                    $itemDetails = json_decode($itemResponse->getBody(), true)['data'];
+                    $item_code = $itemDetails['item_code'] ?? null;
+    
+                    if (!$item_code) {
+                        $errors[] = "Code article introuvable pour l'article {$item_id}.";
+                        continue;
+                    }
+    
+                    // Étape 2 : Vérifier que l'item_code existe dans la table Item
+                    $itemCheckResponse = $this->client->get("{$this->apiUrl}/api/resource/Item/{$item_code}", [
+                        'headers' => $this->headers,
+                    ]);
+    
+                    if ($itemCheckResponse->getStatusCode() !== 200) {
+                        $errors[] = "L'article avec le code {$item_code} n'existe pas.";
+                        continue;
+                    }
+    
+                    // Étape 3 : Mettre à jour l'article avec rate et item_code
+                    $headers = $this->headers;
+                    $data = [
+                        'rate' => $new_rate,
+                        'item_code' => $item_code, // Inclure l'item_code dans le payload
+                    ];
+                    $url = "{$this->apiUrl}/api/resource/Supplier Quotation Item/{$item_id}";
+    
+                    $updateResponse = $this->client->put($url, [
+                        'headers' => $headers,
+                        'json' => $data
+                    ]);
+    
+                    if ($updateResponse->getStatusCode() !== 200) {
+                        $errorMessage = "Erreur lors de la mise à jour de l'article {$item_id}: " . $updateResponse->getBody()->getContents();
+                        Log::error($errorMessage);
+                        $errors[] = $errorMessage;
+                        continue;
+                    }
+    
+                    Log::info("Article mis à jour avec succès", [
+                        'item_id' => $item_id,
+                        'new_rate' => $new_rate,
+                        'item_code' => $item_code
+                    ]);
+    
+                    $updatedItems[] = $item_id;
+    
+                } catch (\Exception $itemEx) {
+                    $errors[] = "Erreur lors de la mise à jour de l'article {$item_id}: " . $itemEx->getMessage();
+                    Log::error("Erreur mise à jour article", [
+                        'item_id' => $item_id,
+                        'error' => $itemEx->getMessage()
+                    ]);
                 }
             }
-            
-            if (!$found) {
-                \Log::error('Item not found: ' . $item_row);
-                return back()->with('error', 'Article non trouvé dans ce devis.');
+    
+            if (!empty($errors)) {
+                return back()->with('error', implode('<br>', $errors));
             }
-            
-            $total = array_sum(array_column($items, 'amount'));
-            
-            $this->client->put("{$this->apiUrl}/api/resource/Supplier Quotation/{$quotation_id}", [
-                'headers' => $this->headers,
-                'json' => [
-                    'items' => $items,
-                    'total' => $total,
-                    'net_total' => $total,
-                    'base_total' => $total,
-                    'base_net_total' => $total,
-                    'grand_total' => $total,
-                    'base_grand_total' => $total
-                ]
-            ]);
-            
+    
+            if (empty($updatedItems)) {
+                return back()->with('error', 'Aucun article n\'a été mis à jour.');
+            }
+    
             return redirect()->route('supplier.quotation.items', ['supplier_id' => $supplier_id, 'quotation_id' => $quotation_id])
-                ->with('success', 'Le prix a été mis à jour avec succès.');
+                ->with('success', count($updatedItems) > 1
+                    ? 'Les prix de ' . count($updatedItems) . ' articles ont été mis à jour avec succès.'
+                    : 'Le prix a été mis à jour avec succès.');
+    
         } catch (\Exception $e) {
-            \Log::error('Erreur API Update Quotation: ' . $e->getMessage());
+            Log::error('Erreur API Update Quotation', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'request_data' => $request->all(),
+                'quotation_id' => $quotation_id
+            ]);
+    
             return back()->with('error', 'Erreur lors de la mise à jour des prix: ' . $e->getMessage());
         }
     }
+    
+
     public function supplierOrders($supplier_id)
     {
         try {

@@ -39,4 +39,5 @@ Route::middleware([\App\Http\Middleware\FrappeAuthMiddleware::class])->group(fun
 Route::get('/supplier/{supplier_id}/quotations', [ErpController::class, 'supplierQuotations'])->name('supplier.quotations');
 Route::get('/supplier/{supplier_id}/quotations/{quotation_id}/items', [ErpController::class, 'quotationItems'])->name('supplier.quotation.items');
 Route::post('/supplier/{supplier_id}/quotations/{quotation_id}/update', [ErpController::class, 'updateQuotation'])->name('supplier.quotation.update');
+
 });
