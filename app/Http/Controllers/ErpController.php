@@ -51,49 +51,109 @@ class ErpController extends Controller
     public function showSupplierDashboard($supplier_id)
     {
         $supplier_id = urldecode($supplier_id);
+        Log::info('Début du tableau de bord fournisseur', ['supplier_id' => $supplier_id]);
 
-        try {
+            try {
+                // Fetch supplier details
+            Log::info('Récupération des détails du fournisseur', ['url' => "{$this->apiUrl}/api/resource/Supplier/{$supplier_id}"]);
             $response = $this->client->get("{$this->apiUrl}/api/resource/Supplier/{$supplier_id}", [
                 'headers' => $this->headers,
             ]);
             $supplier = json_decode($response->getBody(), true)['data'];
-
-            $quotationsCount = 0;
-            $ordersCount = 0;
-            $invoicesCount = 0;
-
-            try {
-                $quotations = $this->client->get("{$this->apiUrl}/api/resource/Supplier Quotation?filters=[['supplier','=','{$supplier_id}']]", [
-                    'headers' => $this->headers,
-                ]);
-                $quotationsCount = count(json_decode($quotations->getBody(), true)['data']);
-
-                $orders = $this->client->get("{$this->apiUrl}/api/resource/Purchase Order?filters=[['supplier','=','{$supplier_id}']]", [
-                    'headers' => $this->headers,
-                ]);
-                $ordersCount = count(json_decode($orders->getBody(), true)['data']);
-
-                $invoices = $this->client->get("{$this->apiUrl}/api/resource/Purchase Invoice?filters=[['supplier','=','{$supplier_id}']]", [
-                    'headers' => $this->headers,
-                ]);
-                $invoicesCount = count(json_decode($invoices->getBody(), true)['data']);
-            } catch (\Exception $e) {
-                Log::error('Erreur récupération stats fournisseur : ' . $e->getMessage());
-            }
+            Log::info('Détails du fournisseur récupérés', ['supplier' => $supplier]);
 
             $stats = [
-                'quotations_count' => $quotationsCount,
-                'orders_count' => $ordersCount,
-                'invoices_count' => $invoicesCount,
+                'quotations_count' => 0,
+                'quotations_total' => 0,
+                'pending_quotations' => 0,
+                'orders_count' => 0,
+                'orders_total' => 0,
+                'pending_orders' => 0,
+                'invoices_count' => 0,
+                'invoices_total' => 0,
+                'unpaid_invoices' => 0,
             ];
+
+            try {
+                // Fetch quotations (aligned with supplierQuotations)
+                Log::info('Récupération des devis', ['supplier_id' => $supplier_id]);
+                $quotations = $this->client->get("{$this->apiUrl}/api/resource/Supplier Quotation", [
+                    'headers' => $this->headers,
+                    'query' => [
+                        'filters' => json_encode([["supplier", "=", $supplier_id]]),
+                        'fields' => json_encode(["name", "grand_total", "net_total", "status"]),
+                        'limit_page_length' => 100,
+                    ],
+                ]);
+                $quotationsData = json_decode($quotations->getBody(), true)['data'];
+                Log::info('Données des devis', ['count' => count($quotationsData), 'data' => $quotationsData]);
+
+                $stats['quotations_count'] = count($quotationsData);
+                $stats['quotations_total'] = array_sum(array_column($quotationsData, 'net_total')); // Use net_total
+                $stats['pending_quotations'] = count(array_filter($quotationsData, fn($q) => in_array($q['status'], ['Draft', 'Submitted'])));
+
+                // Fetch orders (aligned with supplierOrders)
+                Log::info('Récupération des commandes', ['supplier_id' => $supplier_id]);
+                $orders = $this->client->get("{$this->apiUrl}/api/resource/Purchase Order", [
+                    'headers' => $this->headers,
+                    'query' => [
+                        'supplier' => $supplier_id,
+                        'fields' => json_encode(["name", "grand_total", "net_total", "status"]),
+                        'limit_page_length' => 100,
+                    ],
+                ]);
+                $ordersData = json_decode($orders->getBody(), true)['data'];
+                Log::info('Données des commandes', ['count' => count($ordersData), 'data' => $ordersData]);
+
+                $stats['orders_count'] = count($ordersData);
+                $stats['orders_total'] = array_sum(array_column($ordersData, 'net_total')); // Use net_total
+                $stats['pending_orders'] = count(array_filter($ordersData, fn($o) => in_array($o['status'], ['Draft', 'To Receive and Bill'])));
+
+                // Fetch invoices (aligned with supplierAccounting)
+                Log::info('Récupération des factures', ['supplier_id' => $supplier_id]);
+                $invoices = $this->client->get("{$this->apiUrl}/api/resource/Purchase Invoice", [
+                    'headers' => $this->headers,
+                    'query' => [
+                        'supplier' => $supplier_id,
+                        'fields' => json_encode(["name", "grand_total", "net_total", "status"]),
+                        'limit_page_length' => 100,
+                    ],
+                ]);
+                $invoicesData = json_decode($invoices->getBody(), true)['data'];
+                Log::info('Données des factures', ['count' => count($invoicesData), 'data' => $invoicesData]);
+
+                $stats['invoices_count'] = count($invoicesData);
+                $stats['invoices_total'] = array_sum(array_column($invoicesData, 'net_total')); // Use net_total
+                $stats['unpaid_invoices'] = count(array_filter($invoicesData, fn($i) => in_array($i['status'], ['Unpaid', 'Overdue'])));
+
+                Log::info('Statistiques calculées', ['stats' => $stats]);
+
+                // // Dump and die to inspect data
+                // dd([
+                //     'supplier_id' => $supplier_id,
+                //     'supplier' => $supplier,
+                //     'quotations_data' => $quotationsData,
+                //     'orders_data' => $ordersData,
+                //     'invoices_data' => $invoicesData,
+                //     'stats' => $stats,
+                // ]);
+
+            } catch (\Exception $e) {
+                Log::error('Erreur lors de la récupération des statistiques fournisseur', [
+                    'message' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
+                ]);
+            }
 
             return view('suppliers.dashboard', compact('supplier', 'stats'));
         } catch (\Exception $e) {
-            Log::error('Erreur dashboard fournisseur : ' . $e->getMessage());
+            Log::error('Erreur générale du tableau de bord fournisseur', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
             return back()->with('error', 'Impossible de charger les informations du fournisseur.');
         }
     }
-
     // Liste des demandes de devis
     public function supplierQuotations($supplier_id)
     {
@@ -194,64 +254,53 @@ class ErpController extends Controller
 
     public function updateQuotation(Request $request, $supplier_id, $quotation_id)
     {
-        $request->validate([
-            'items' => 'required|array',
-            'items.*.item_row' => 'required|string',
-            'items.*.new_rate' => 'required|numeric|min:0',
-        ]);
-    
         try {
-            // Récupérer le devis pour obtenir les informations néc     essaires
+            \Log::info('Received data:', $request->all());
+    
             $quotationResponse = $this->client->get("{$this->apiUrl}/api/resource/Supplier Quotation/{$quotation_id}", [
                 'headers' => $this->headers,
-                'query' => ['fields' => json_encode(['company', 'items.name', 'items.item_code', 'items.qty'])],
             ]);
             $quotation = json_decode($quotationResponse->getBody(), true)['data'];
-            $company = $quotation['company'] ?? 'Votre Entreprise';
-    
-            // Débogage
-            \Log::info('Données du devis:', ['quotation' => $quotation]);
-            \Log::info('Données de la requête:', ['request' => $request->all()]);
-    
-            // Mettre à jour chaque article individuellement
-            $updated = false;
-            foreach ($request->input('items', []) as $inputItem) {
-                $item_row = $inputItem['item_row'];
-                $new_rate = (float) $inputItem['new_rate'];
-    
-                // Trouver l'article correspondant
-                $itemFound = false;
-                foreach ($quotation['items'] ?? [] as $item) {
-                    if ($item['name'] === $item_row) {
-                        $itemFound = true;
-                        // Mettre à jour l'article via l'endpoint Supplier Quotation Item
-                        $this->client->put("{$this->apiUrl}/api/resource/Supplier Quotation Item/{$item_row}", [
-                            'headers' => $this->headers,
-                            'json' => [
-                                'rate' => $new_rate,
-                                'amount' => $new_rate * ($item['qty'] ?? 1),
-                                'company' => $company, // Inclure pour éviter l'erreur 417
-                            ]
-                        ]);
-                        $updated = true;
-                        break;
-                    }
-                }
-    
-                if (!$itemFound) {
-                    \Log::warning('Article non trouvé:', ['item_row' => $item_row]);
+            $items = $quotation['items'];
+            
+            $item_row = $request->input('item_row');
+            $new_rate = (float) $request->input('new_rate');
+            
+            $found = false;
+            foreach ($items as &$item) {
+                if ($item['name'] === $item_row) {
+                    $item['rate'] = $new_rate;
+                    $item['amount'] = $new_rate * $item['qty'];
+                    $found = true;
+                    break;
                 }
             }
-    
-            if (!$updated) {
-                return back()->with('error', 'Aucun article n\'a été mis à jour.');
+            
+            if (!$found) {
+                \Log::error('Item not found: ' . $item_row);
+                return back()->with('error', 'Article non trouvé dans ce devis.');
             }
-    
+            
+            $total = array_sum(array_column($items, 'amount'));
+            
+            $this->client->put("{$this->apiUrl}/api/resource/Supplier Quotation/{$quotation_id}", [
+                'headers' => $this->headers,
+                'json' => [
+                    'items' => $items,
+                    'total' => $total,
+                    'net_total' => $total,
+                    'base_total' => $total,
+                    'base_net_total' => $total,
+                    'grand_total' => $total,
+                    'base_grand_total' => $total
+                ]
+            ]);
+            
             return redirect()->route('supplier.quotation.items', ['supplier_id' => $supplier_id, 'quotation_id' => $quotation_id])
-                ->with('success', 'Les prix ont été mis à jour avec succès.');
+                ->with('success', 'Le prix a été mis à jour avec succès.');
         } catch (\Exception $e) {
             \Log::error('Erreur API Update Quotation: ' . $e->getMessage());
-            return back()->with('error', 'Erreur lors de la mise à jour des prix : ' . $e->getMessage());
+            return back()->with('error', 'Erreur lors de la mise à jour des prix: ' . $e->getMessage());
         }
     }
     public function supplierOrders($supplier_id)

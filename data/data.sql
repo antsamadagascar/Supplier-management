@@ -14,7 +14,7 @@ VALUES
 INSERT INTO `tabSupplier` (name, supplier_name, supplier_group, supplier_type, country, creation, modified)
 VALUES 
 ('SUP-001', 'TechSolutions SA', 'Matériel Informatique', 'Entreprise', 'France', NOW(), NOW()),
-('SUP-002', 'CloudServe Inc.', 'Services Cloud', 'Entreprise', 'États-Unis', NOW(), NOW()),
+('SUl fkakjsdklfjhdP-002', 'CloudServe Inc.', 'Services Cloud', 'Entreprise', 'États-Unis', NOW(), NOW()),
 ('SUP-003', 'Bureau Équipement', 'Équipement de Bureau', 'Entreprise', 'Belgique', NOW(), NOW());
 
 INSERT INTO `tabMaterial Request` (name, title, material_request_type, transaction_date, status, company, creation, modified, required_by)
