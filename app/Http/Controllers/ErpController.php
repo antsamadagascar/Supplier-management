@@ -599,48 +599,5 @@ class ErpController extends Controller
         }
     }
 
-    // // Afficher le formulaire pour payer une facture
-    // public function showPayInvoice($invoice_id)
-    // {
-    //     try {
-    //         $response = $this->client->get("{$this->apiUrl}/api/resource/Purchase Invoice/{$invoice_id}", [
-    //             'headers' => $this->headers,
-    //         ]);
-    //         $invoice = json_decode($response->getBody(), true)['data'];
-    //         return view('invoices.pay', compact('invoice'));
-    //     } catch (\Exception $e) {
-    //         Log::error('Erreur API Invoice: ' . $e->getMessage());
-    //         return back()->with('error', 'Erreur lors de la récupération de la facture.');
-    //     }
-    // }
-
-    // // Payer une facture
-    // public function payInvoice(Request $request)
-    // {
-    //     $request->validate([
-    //         'invoice_id' => 'required',
-    //         'supplier' => 'required',
-    //         'paid_amount' => 'required|numeric|min:0',
-    //     ]);
-
-    //     try {
-    //         $this->client->post("{$this->apiUrl}/api/resource/Payment Entry", [
-    //             'headers' => $this->headers,
-    //             'json' => [
-    //                 'payment_type' => 'Pay',
-    //                 'party_type' => 'Supplier',
-    //                 'party' => $request->supplier,
-    //                 'paid_amount' => $request->paid_amount,
-    //                 'reference_doctype' => 'Purchase Invoice',
-    //                 'reference_name' => $request->invoice_id,
-    //                 'posting_date' => now()->format('Y-m-d'),
-    //             ],
-    //         ]);
-    //         return redirect()->route('invoices.index')->with('success', 'Paiement enregistré avec succès.');
-    //     } catch (\Exception $e) {
-    //         Log::error('Erreur API Payment: ' . $e->getMessage());
-    //         return back()->with('error', 'Erreur lors de l\'enregistrement du paiement.');
-    //     }
-    // }
 
 }

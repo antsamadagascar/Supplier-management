@@ -4,6 +4,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ErpController;
+use App\Http\Controllers\InvoiceController;
+
 
 // Routes publiques
 Route::get('/', function () {
@@ -35,9 +37,11 @@ Route::middleware([\App\Http\Middleware\FrappeAuthMiddleware::class])->group(fun
     Route::post('/supplier/{supplier_id}/quotations/{quotation_id}/update', [ErpController::class, 'updateQuotation'])->name('supplier.quotation.update');
 
     // Routes pour le module fournisseur et devis
-// Routes pour le module fournisseur et devis
-Route::get('/supplier/{supplier_id}/quotations', [ErpController::class, 'supplierQuotations'])->name('supplier.quotations');
-Route::get('/supplier/{supplier_id}/quotations/{quotation_id}/items', [ErpController::class, 'quotationItems'])->name('supplier.quotation.items');
-Route::post('/supplier/{supplier_id}/quotations/{quotation_id}/update', [ErpController::class, 'updateQuotation'])->name('supplier.quotation.update');
+    Route::get('/supplier/{supplier_id}/quotations', [ErpController::class, 'supplierQuotations'])->name('supplier.quotations');
+    Route::get('/supplier/{supplier_id}/quotations/{quotation_id}/items', [ErpController::class, 'quotationItems'])->name('supplier.quotation.items');
+    Route::post('/supplier/{supplier_id}/quotations/{quotation_id}/update', [ErpController::class, 'updateQuotation'])->name('supplier.quotation.update');
+
+    Route::get('/invoices/{invoice_id}/pay', [InvoiceController::class, 'showPayInvoice'])->name('invoices.showPayForm');
+    Route::post('/invoices/pay', [InvoiceController::class, 'payInvoice'])->name('invoices.pay');
 
 });

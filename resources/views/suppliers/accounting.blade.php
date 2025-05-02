@@ -55,11 +55,12 @@
                                 <td>{{ number_format($invoice['paid_amount'] ?? 0, 2, ',', ' ') }}</td>
                                 <td>{{ $invoice['currency'] ?? '—' }}</td>
                                 <td>
-                                    @if($invoice['status'] !== 'Paid')
-                                        <a href="#" class="btn btn-sm btn-outline-primary">Régler</a>
-                                    @else
-                                        <span class="text-muted">Payée</span>
-                                    @endif
+                                @if($invoice['status'] !== 'Paid')
+                                    <a href="{{ route('invoices.showPayForm', ['invoice_id' => $invoice['name']]) }}" class="btn btn-sm btn-outline-primary">Régler</a>
+                                @else
+                                    <span class="text-muted">Payée</span>
+                                @endif
+
                                 </td>
                             </tr>
                         @empty
