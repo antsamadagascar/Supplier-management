@@ -31,7 +31,7 @@ VALUES
 
 INSERT INTO `tabSupplier Quotation` (name, supplier, transaction_date, valid_till, status, company, creation, modified)
 VALUES 
-('QUOT-001', 'SUP-001', '2025-04-21', '2025-05-21', 'Submitted', 'Votre Entreprise', NOW(), NOW()),
+('QUOT-001', 'SUP-001', '2025-04-21', '2025-05-21', 'Draft', 'Votre Entreprise', NOW(), NOW()),
 ('QUOT-002', 'SUP-002', '2025-04-23', '2025-05-23', 'Submitted', 'Votre Entreprise', NOW(), NOW()),
 ('QUOT-003', 'SUP-003', '2025-04-26', '2025-05-26', 'Submitted', 'Votre Entreprise', NOW(), NOW());
 
