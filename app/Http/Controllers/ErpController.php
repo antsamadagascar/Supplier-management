@@ -598,42 +598,6 @@ class ErpController extends Controller
             return back()->with('error', 'Erreur lors de la récupération des données comptables: ' . $e->getMessage());
         }
     }
-    // // Afficher le formulaire pour mettre à jour le prix
-    // public function showUpdatePrice($item_price_id)
-    // {
-    //     try {
-    //         $response = $this->client->get("{$this->apiUrl}/api/resource/Item Price/{$item_price_id}", [
-    //             'headers' => $this->headers,
-    //         ]);
-    //         $item_price = json_decode($response->getBody(), true)['data'];
-    //         return view('prices.update', compact('item_price'));
-    //     } catch (\Exception $e) {
-    //         Log::error('Erreur API Item Price: ' . $e->getMessage());
-    //         return back()->with('error', 'Erreur lors de la récupération du prix.');
-    //     }
-    // }
-
-    // // Mettre à jour le prix
-    // public function updatePrice(Request $request)
-    // {
-    //     $request->validate([
-    //         'item_price_id' => 'required',
-    //         'price_list_rate' => 'required|numeric|min:0',
-    //     ]);
-
-    //     try {
-    //         $this->client->put("{$this->apiUrl}/api/resource/Item Price/{$request->item_price_id}", [
-    //             'headers' => $this->headers,
-    //             'json' => [
-    //                 'price_list_rate' => $request->price_list_rate,
-    //             ],
-    //         ]);
-    //         return redirect()->route('quotations.index')->with('success', 'Prix mis à jour avec succès.');
-    //     } catch (\Exception $e) {
-    //         Log::error('Erreur API Update Price: ' . $e->getMessage());
-    //         return back()->with('error', 'Erreur lors de la mise à jour du prix.');
-    //     }
-    // }
 
     // // Afficher le formulaire pour payer une facture
     // public function showPayInvoice($invoice_id)
