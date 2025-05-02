@@ -68,7 +68,7 @@
                             }
                             echo number_format($totalAmount, 2);
                         @endphp
-                        {{ isset($orders[0]['currency']) ? $orders[0]['currency'] : '' }}
+                        {{ isset($orders[0]['currency']) ? $orders[0]['currency'] : 'EUR' }}
                     </h3>
                 </div>
             </div>
@@ -82,7 +82,16 @@
                 Toutes les commandes ({{ count($orders) }})
             </a>
         </li>
-     
+        <li class="nav-item">
+            <a class="nav-link" id="completed-tab" data-toggle="tab" href="#completed" role="tab">
+                Complètes ({{ count($completedOrders) }})
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="pending-tab" data-toggle="tab" href="#pending" role="tab">
+                En attente ({{ count($pendingOrders) }})
+            </a>
+        </li>
     </ul>
         
         <div class="tab-content" id="orderTabsContent">
