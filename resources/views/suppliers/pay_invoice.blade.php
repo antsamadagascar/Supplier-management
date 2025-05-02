@@ -2,7 +2,13 @@
 
 @section('content')
 <div class="container">
+    
     <div class="row mb-4">
+    <div class="col-md-4 text-right">
+            <a href="{{ route('supplier.dashboard', ['supplier_id' => $supplier['name'] ]) }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Retour au tableau de bord
+            </a>
+        </div>
         <div class="col-md-8">
             <h1>Paiement de facture</h1>
             <h3>Facture: {{ $invoice['name'] }}</h3>
