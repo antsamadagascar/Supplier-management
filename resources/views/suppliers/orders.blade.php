@@ -6,6 +6,9 @@
         <div class="col-md-8">
             <h1>Commandes</h1>
             <h3>Fournisseur: {{ $supplier['name'] }}
+                @if(isset($supplier['supplier_name']))
+                    ({{ $supplier['supplier_name'] }})
+                @endif
             </h3>
         </div>
         <div class="col-md-4 text-right">
@@ -27,68 +30,76 @@
         </div>
     @endif
     
-    <div class="card">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0">2. Liste des commandes</h5>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>Référence</th>
-                            <th>Date</th>
-                            <th>Montant total</th>
-                            <th>Statut</th>
-                            <th>Statut de réception</th>
-                            <th>Statut de paiement</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($orders as $order)
-                            <tr>
-                                <td>{{ $order['name'] ?? 'N/A' }}</td>
-                                <td>{{ isset($order['transaction_date']) ? \Carbon\Carbon::parse($order['transaction_date'])->format('d/m/Y') : 'N/A' }}</td>
-                                <td>{{ $order['grand_total'] ?? '0.00' }} {{ $order['currency'] ?? 'EUR' }}</td>
-                                <td>
-                                    <span class="badge {{ isset($order['status']) ? ($order['status'] == 'To Receive and Bill' ? 'badge-warning' : ($order['status'] == 'Completed' ? 'badge-success' : 'badge-secondary')) : 'badge-secondary' }}">
-                                        {{ $order['status'] ?? 'Unknown' }}
-                                    </span>
-                                </td>
-                                <td>
-                                    <span class="badge {{ isset($order['per_received']) && $order['per_received'] == 100 ? 'badge-success' : 'badge-warning' }}">
-                                        @if(isset($order['per_received']) && $order['per_received'] == 100)
-                                            2.1.1 Reçu (100%)
-                                        @else
-                                            En attente ({{ $order['per_received'] ?? '0' }}%)
-                                        @endif
-                                    </span>
-                                </td>
-                                <td>
-                                    <span class="badge {{ isset($order['per_billed']) && $order['per_billed'] == 100 ? 'badge-success' : 'badge-warning' }}">
-                                        @if(isset($order['per_billed']) && $order['per_billed'] == 100 && isset($order['payment_status']) && $order['payment_status'] == 'Paid')
-                                            2.1.2 Payé (100%)
-                                        @elseif(isset($order['per_billed']) && $order['per_billed'] == 100)
-                                            Facturé (100%)
-                                        @else
-                                            Non facturé ({{ $order['per_billed'] ?? '0' }}%)
-                                        @endif
-                                    </span>
-                                </td>
-                                <td>
-                                 
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="7" class="text-center">Aucune commande trouvée pour ce fournisseur</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+    <!-- Résumé des commandes -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total commandes</h5>
+                    <h3>{{ count($orders) }}</h3>
+                </div>
             </div>
         </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Commandes complètes</h5>
+                    <h3>{{ count($completedOrders) }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Commandes en attente</h5>
+                    <h3>{{ count($pendingOrders) }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Montant total</h5>
+                    <h3>
+                        @php
+                            $totalAmount = 0;
+                            foreach($orders as $order) {
+                                $totalAmount += ($order['grand_total'] ?? 0);
+                            }
+                            echo number_format($totalAmount, 2);
+                        @endphp
+                        {{ isset($orders[0]['currency']) ? $orders[0]['currency'] : '' }}
+                    </h3>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Onglets pour séparer les commandes complètes et en attente -->
+    <ul class="nav nav-tabs mb-3" id="orderTabs" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link active" id="all-tab" data-toggle="tab" href="#all" role="tab">
+                Toutes les commandes ({{ count($orders) }})
+            </a>
+        </li>
+     
+    </ul>
+        
+        <div class="tab-content" id="orderTabsContent">
+            <!-- Toutes les commandes -->
+            <div class="tab-pane fade show active" id="all" role="tabpanel">
+                @include('suppliers.orders_table', ['orders' => $orders])
+            </div>
+            
+            <!-- Commandes complètes -->
+            <div class="tab-pane fade" id="completed" role="tabpanel">
+                @include('suppliers.orders_table', ['orders' => $completedOrders])
+            </div>
+            
+            <!-- Commandes en attente -->
+            <div class="tab-pane fade" id="pending" role="tabpanel">
+                @include('suppliers.orders_table', ['orders' => $pendingOrders])
+            </div>
     </div>
 </div>
 @endsection

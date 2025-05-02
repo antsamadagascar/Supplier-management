@@ -5,7 +5,8 @@
     <div class="row mb-4">
         <div class="col-md-8">
             <h1>Mode Comptable</h1>
-            <h3>Fournisseur: {{ $supplier['name'] }}</h3>
+            <h3>Fournisseur: {{ $supplier['supplier_name'] }} ({{ $supplier['name'] }})</h3>
+            <p>Groupe: {{ $supplier['supplier_group'] }} | Type: {{ $supplier['supplier_type'] }} | Pays: {{ $supplier['country'] }}</p>
         </div>
         <div class="col-md-4 text-right">
             <a href="{{ route('supplier.dashboard', ['supplier_id' => $supplier['name'] ]) }}" class="btn btn-secondary">
@@ -13,35 +14,27 @@
             </a>
         </div>
     </div>
-    
-    @if(session('success'))
-        <div class="alert alert-success">
-            {{ session('success') }}
-        </div>
-    @endif
-    
-    @if(session('error'))
-        <div class="alert alert-danger">
-            {{ session('error') }}
-        </div>
-    @endif
-    
+
     <div class="card mb-4">
         <div class="card-header bg-primary text-white">
             <h5 class="mb-0">3.1 Factures</h5>
         </div>
         <div class="card-body">
             <div class="table-responsive">
-                <table class="table table-striped">
-                    <thead>
+                <table class="table table-bordered table-hover">
+                    <thead class="thead-light">
                         <tr>
                             <th>Référence</th>
                             <th>Date</th>
-                            <th>Commande associée</th>
-                            <th>Montant total</th>
+                            <th>Article</th>
+                            <th>Quantité</th>
+                            <th>PU</th>
+                            <th>Montant</th>
+                            <th>Commande</th>
                             <th>Statut</th>
                             <th>Montant payé</th>
-                            <th>Actions</th>
+                            <th>Devise</th>
+                            <th>Action</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -49,25 +42,29 @@
                             <tr>
                                 <td>{{ $invoice['name'] ?? 'N/A' }}</td>
                                 <td>{{ isset($invoice['posting_date']) ? \Carbon\Carbon::parse($invoice['posting_date'])->format('d/m/Y') : 'N/A' }}</td>
-                                <td>{{ $invoice['items'][0]['purchase_order'] ?? 'N/A' }}</td>
-                                <td>{{ $invoice['grand_total'] ?? '0.00' }} {{ $invoice['currency'] ?? 'EUR' }}</td>
+                                <td>{{ $invoice['item_code'] ?? 'N/A' }}</td>
+                                <td>{{ number_format($invoice['qty'] ?? 0, 2, ',', ' ') }}</td>
+                                <td>{{ number_format($invoice['rate'] ?? 0, 2, ',', ' ') }}</td>
+                                <td>{{ number_format($invoice['amount'] ?? 0, 2, ',', ' ') }}</td>
+                                <td>{{ $invoice['purchase_order'] ?? '—' }}</td>
                                 <td>
-                                    <span class="badge {{ isset($invoice['status']) ? ($invoice['status'] == 'Paid' ? 'badge-success' : ($invoice['status'] == 'Unpaid' ? 'badge-danger' : 'badge-warning')) : 'badge-secondary' }}">
-                                        {{ $invoice['status'] ?? 'Unknown' }}
+                                    <span class="badge {{ $invoice['status'] === 'Paid' ? 'badge-success' : ($invoice['status'] === 'Unpaid' ? 'badge-danger' : 'badge-warning') }}">
+                                        {{ $invoice['status'] ?? '—' }}
                                     </span>
                                 </td>
-                                <td>{{ $invoice['paid_amount'] ?? '0.00' }} {{ $invoice['currency'] ?? 'EUR' }}</td>
+                                <td>{{ number_format($invoice['paid_amount'] ?? 0, 2, ',', ' ') }}</td>
+                                <td>{{ $invoice['currency'] ?? '—' }}</td>
                                 <td>
-                                    @if(isset($invoice['status']) && $invoice['status'] != 'Paid')
-                                    
+                                    @if($invoice['status'] !== 'Paid')
+                                        <a href="#" class="btn btn-sm btn-outline-primary">Régler</a>
                                     @else
-                                        <button class="btn btn-sm btn-secondary" disabled>Payée</button>
+                                        <span class="text-muted">Payée</span>
                                     @endif
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="text-center">Aucune facture trouvée pour ce fournisseur</td>
+                                <td colspan="11" class="text-center">Aucune facture trouvée pour ce fournisseur</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -75,7 +72,7 @@
             </div>
         </div>
     </div>
-    
+
     <div class="card">
         <div class="card-header bg-info text-white">
             <h5 class="mb-0">Historique des paiements</h5>
@@ -83,7 +80,7 @@
         <div class="card-body">
             <div class="table-responsive">
                 <table class="table table-striped">
-                    <thead>
+                    <thead class="thead-light">
                         <tr>
                             <th>Référence</th>
                             <th>Date</th>
@@ -98,12 +95,12 @@
                             <tr>
                                 <td>{{ $payment['name'] ?? 'N/A' }}</td>
                                 <td>{{ isset($payment['posting_date']) ? \Carbon\Carbon::parse($payment['posting_date'])->format('d/m/Y') : 'N/A' }}</td>
-                                <td>{{ isset($payment['references']) && !empty($payment['references']) ? ($payment['references'][0]['reference_name'] ?? 'N/A') : 'N/A' }}</td>
-                                <td>{{ $payment['paid_amount'] ?? '0.00' }} {{ $payment['paid_from_account_currency'] ?? 'EUR' }}</td>
-                                <td>{{ $payment['mode_of_payment'] ?? 'Virement' }}</td>
+                                <td>{{ $payment['references'][0]['reference_name'] ?? '—' }}</td>
+                                <td>{{ number_format($payment['paid_amount'] ?? 0, 2, ',', ' ') }} {{ $payment['paid_from_account_currency']  }}</td>
+                                <td>{{ $payment['mode_of_payment'] ?? '—' }}</td>
                                 <td>
-                                    <span class="badge {{ isset($payment['docstatus']) && $payment['docstatus'] == 1 ? 'badge-success' : 'badge-secondary' }}">
-                                        {{ isset($payment['docstatus']) && $payment['docstatus'] == 1 ? 'Validé' : 'Brouillon' }}
+                                    <span class="badge {{ $payment['docstatus'] == 1 ? 'badge-success' : 'badge-secondary' }}">
+                                        {{ $payment['docstatus'] == 1 ? 'Validé' : 'Brouillon' }}
                                     </span>
                                 </td>
                             </tr>

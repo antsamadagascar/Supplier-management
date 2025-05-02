@@ -383,27 +383,162 @@ class ErpController extends Controller
             return back()->with('error', 'Erreur lors de la mise à jour des prix: ' . $e->getMessage());
         }
     }
-    
-
     public function supplierOrders($supplier_id)
     {
         try {
+            // Récupération des informations du fournisseur
             $supplierResponse = $this->client->get("{$this->apiUrl}/api/resource/Supplier/{$supplier_id}", [
                 'headers' => $this->headers,
             ]);
             $supplier = json_decode($supplierResponse->getBody(), true)['data'];
-
-            $ordersResponse = $this->client->get("{$this->apiUrl}/api/resource/Purchase Order", [
-                'headers' => $this->headers,
-                'query' => ['supplier' => $supplier_id],  
-            ]);
-            $orders = json_decode($ordersResponse->getBody(), true)['data'];
-
-            return view('suppliers.orders', compact('orders', 'supplier'));
-
+            
+            // Log du fournisseur récupéré
+            Log::info('Fournisseur récupéré: ' . json_encode($supplier));
+            
+            // APPROCHE 1: Essayer d'abord avec 'supplier' comme paramètre direct
+            try {
+                $ordersListResponse1 = $this->client->get("{$this->apiUrl}/api/resource/Purchase Order", [
+                    'headers' => $this->headers,
+                    'query' => [
+                        'supplier' => $supplier_id,
+                        'limit' => 100
+                    ],
+                ]);
+                
+                $ordersList1 = json_decode($ordersListResponse1->getBody(), true);
+                Log::info('Résultat approche 1: ' . json_encode($ordersList1));
+                
+                if (isset($ordersList1['data']) && is_array($ordersList1['data']) && count($ordersList1['data']) > 1) {
+                    $ordersList = $ordersList1['data'];
+                    Log::info('Utilisation de l\'approche 1 - Nombre de commandes: ' . count($ordersList));
+                } else {
+                    // Si moins de 2 commandes, essayons l'approche 2
+                    throw new \Exception("Pas assez de commandes avec l'approche 1");
+                }
+            } catch (\Exception $e1) {
+                Log::info('Approche 1 a échoué, essai de l\'approche 2: ' . $e1->getMessage());
+                
+                // APPROCHE 2: Utiliser le format de filtre JSON
+                $ordersListResponse2 = $this->client->get("{$this->apiUrl}/api/resource/Purchase Order", [
+                    'headers' => $this->headers,
+                    'query' => [
+                        'filters' => json_encode([["Purchase Order", "supplier", "=", $supplier_id]]),
+                        'limit' => 100
+                    ],
+                ]);
+                
+                $ordersList2 = json_decode($ordersListResponse2->getBody(), true);
+                Log::info('Résultat approche 2: ' . json_encode($ordersList2));
+                
+                if (isset($ordersList2['data']) && is_array($ordersList2['data']) && count($ordersList2['data']) > 1) {
+                    $ordersList = $ordersList2['data'];
+                    Log::info('Utilisation de l\'approche 2 - Nombre de commandes: ' . count($ordersList));
+                } else {
+                    // APPROCHE 3: Récupérer toutes les commandes et filtrer côté client
+                    Log::info('Approches 1 et 2 ont échoué, essai de l\'approche 3');
+                    $allOrdersResponse = $this->client->get("{$this->apiUrl}/api/resource/Purchase Order", [
+                        'headers' => $this->headers,
+                        'query' => [
+                            'limit' => 500  // Augmenter la limite pour récupérer plus de commandes
+                        ],
+                    ]);
+                    
+                    $allOrdersData = json_decode($allOrdersResponse->getBody(), true);
+                    
+                    // Journaliser le nombre total de commandes avant filtrage
+                    if (isset($allOrdersData['data'])) {
+                        Log::info('Toutes les commandes récupérées avant filtrage: ' . count($allOrdersData['data']));
+                    }
+                    
+                    // Récupérer toutes les commandes
+                    $allOrdersDetail = [];
+                    
+                    if (isset($allOrdersData['data']) && is_array($allOrdersData['data'])) {
+                        foreach ($allOrdersData['data'] as $order) {
+                            try {
+                                $orderDetailResponse = $this->client->get("{$this->apiUrl}/api/resource/Purchase Order/{$order['name']}", [
+                                    'headers' => $this->headers,
+                                ]);
+                                
+                                $orderDetail = json_decode($orderDetailResponse->getBody(), true)['data'];
+                                
+                                // Filtrer les commandes du fournisseur demandé
+                                if (isset($orderDetail['supplier']) && $orderDetail['supplier'] == $supplier_id) {
+                                    $allOrdersDetail[] = $orderDetail;
+                                    Log::info('Commande trouvée pour le fournisseur ' . $supplier_id . ': ' . $orderDetail['name']);
+                                }
+                            } catch (\Exception $e) {
+                                Log::warning('Erreur lors de la récupération des détails de la commande ' . $order['name'] . ': ' . $e->getMessage());
+                            }
+                        }
+                    }
+                    
+                    $ordersList = $allOrdersDetail;
+                    Log::info('Utilisation de l\'approche 3 - Nombre de commandes après filtrage: ' . count($ordersList));
+                }
+            }
+            
+            // Si on a pas de commandes à ce stade, logger une erreur
+            if (empty($ordersList)) {
+                Log::error('Aucune commande trouvée pour le fournisseur ' . $supplier_id . ' après toutes les tentatives.');
+                return view('suppliers.orders', [
+                    'orders' => [],
+                    'completedOrders' => [],
+                    'pendingOrders' => [],
+                    'supplier' => $supplier
+                ]);
+            }
+            
+            // Récupération des détails complets pour chaque commande
+            $allOrders = [];
+            
+            foreach ($ordersList as $orderSummary) {
+                try {
+                    // Vérifier si on a déjà les détails complets
+                    if (isset($orderSummary['transaction_date']) && isset($orderSummary['status'])) {
+                        $allOrders[] = $orderSummary;
+                    } else {
+                        $orderDetailResponse = $this->client->get("{$this->apiUrl}/api/resource/Purchase Order/{$orderSummary['name']}", [
+                            'headers' => $this->headers,
+                        ]);
+                        
+                        $orderDetail = json_decode($orderDetailResponse->getBody(), true)['data'];
+                        $allOrders[] = $orderDetail;
+                    }
+                } catch (\Exception $e) {
+                    Log::warning('Erreur lors de la récupération des détails de la commande ' . $orderSummary['name'] . ': ' . $e->getMessage());
+                }
+            }
+            
+            // Séparation des commandes en deux catégories
+            $completedOrders = [];
+            $pendingOrders = [];
+            
+            foreach ($allOrders as $order) {
+                // Considère une commande comme complétée si elle est reçue et payée à 100%
+                if (isset($order['per_received']) && $order['per_received'] == 100 && 
+                    isset($order['per_billed']) && $order['per_billed'] == 100) {
+                    $completedOrders[] = $order;
+                } else {
+                    $pendingOrders[] = $order;
+                }
+            }
+            
+            // Fusionne les commandes en mettant les complètes en premier
+            $orders = array_merge($completedOrders, $pendingOrders);
+            
+            // Journalisation du résultat final
+            Log::info('Nombre total de commandes récupérées: ' . count($orders));
+            foreach ($orders as $index => $order) {
+                Log::info("Commande {$index}: {$order['name']} - Fournisseur: {$order['supplier']}");
+            }
+            
+            return view('suppliers.orders', compact('orders', 'supplier', 'completedOrders', 'pendingOrders'));
         } catch (\Exception $e) {
             Log::error('Erreur API Supplier Orders: ' . $e->getMessage());
-            return back()->with('error', 'Erreur lors de la récupération des commandes.');
+            Log::error('Trace: ' . $e->getTraceAsString());
+            
+            return back()->with('error', 'Erreur lors de la récupération des commandes: ' . $e->getMessage());
         }
     }
 
@@ -416,12 +551,12 @@ class ErpController extends Controller
             ]);
             $supplier = json_decode($supplierResponse->getBody(), true)['data'];
             
-            // Get invoices with nested items fields
+            // Get invoices with nested items fields, including purchase_order
             $invoicesResponse = $this->client->get("{$this->apiUrl}/api/resource/Purchase Invoice", [
                 'headers' => $this->headers,
                 'query' => [
                     'supplier' => $supplier_id,
-                    'fields' => '["name", "posting_date", "grand_total", "currency", "status", "paid_amount", "items.item_code", "items.item_name", "items.qty", "items.rate", "items.amount"]'
+                    'fields' => '["name", "posting_date", "grand_total", "currency", "status", "paid_amount", "items.item_code", "items.item_name", "items.qty", "items.rate", "items.amount", "items.purchase_order"]'
                 ],
             ]);
             $invoices = json_decode($invoicesResponse->getBody(), true)['data'];
@@ -435,6 +570,13 @@ class ErpController extends Controller
                 ],
             ]);
             $payments = json_decode($paymentsResponse->getBody(), true)['data'];
+            
+            // ENLEVER CE DUMP QUI STOPPE L'EXÉCUTION
+            // dd([
+            //     'supplier' => $supplier,
+            //     'invoices' => $invoices,
+            //     'payments' => $payments
+            // ]);
             
             // Process invoices to ensure items is an array
             foreach ($invoices as &$invoice) {
