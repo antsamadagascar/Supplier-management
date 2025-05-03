@@ -60,8 +60,8 @@ class DashboardController extends Controller
                 foreach ($suppliers as $supplier) {
                     $supplier_id = $supplier['name'];
                     $supplierStats = $this->getSupplierStats($supplier_id, $startDate, $endDate);
-                    DD($supplierStats);
-                    $dashboardData['suppliers_data'][] = [
+                //    DD($supplierStats);
+                   $dashboardData['suppliers_data'][] = [
                         'name' => $supplier['supplier_name'] ?? $supplier_id,
                         'id' => $supplier_id,
                         'quotations_count' => $supplierStats['quotations_count'],
