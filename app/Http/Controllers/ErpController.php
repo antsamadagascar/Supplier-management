@@ -387,6 +387,8 @@ class ErpController extends Controller
                 'limit_page_length' => 100
             ]);
 
+
+             dd($invoices);
             $payments = $this->erpApiService->getResource('Payment Entry', [
                 'party' => $supplier_id,
                 'fields' => [
