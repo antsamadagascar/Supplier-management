@@ -15,10 +15,17 @@
                     <div class="position-sticky pt-3">
                         <ul class="nav flex-column">
                         <li class="nav-item">
+                            <a class="nav-link" href="{{ route('dashboard') }}">
+                            <i class="fas fa-tachometer-alt"></i> Dashboard
+    
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link" href="{{ route('suppliers.index') }}">
                                 <i class="fas fa-users"></i> Fournisseurs
                             </a>
                         </li>
+
 
                             <hr>
                         </ul>

@@ -19,8 +19,9 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::middleware([\App\Http\Middleware\FrappeAuthMiddleware::class])->group(function () {
     Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
     Route::get('/user', [AuthController::class, 'getLoggedUser'])->name('user.info');
-    Route::get('/dashboard', [AuthController::class, 'dashboard'])->name('dashboard');
-    
+   //
+    Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
+
     // Liste des fournisseurs (correction du doublon)
     Route::get('/suppliers', [ErpController::class, 'suppliers'])->name('suppliers.index');
     
