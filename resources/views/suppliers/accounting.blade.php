@@ -5,8 +5,8 @@
     <div class="row mb-4">
         <div class="col-md-8">
             <h1>Mode Comptable</h1>
-            <h3>Fournisseur: {{ $supplier['supplier_name'] }} ({{ $supplier['name'] }})</h3>
-            <p>Groupe: {{ $supplier['supplier_group'] ?? 'auccun'}} | Type: {{ $supplier['supplier_type'] }} | Pays: {{ $supplier['country'] }}</p>
+            <h3>Fournisseur: {{ $supplier['supplier_name'] ?? 'Auccun'}} ({{ $supplier['name'] ?? 'Auccun'}})</h3>
+            <p>Groupe: {{ $supplier['supplier_group'] ?? 'Auccun'}} | Type: {{ $supplier['supplier_type'] }} | Pays: {{ $supplier['country'] ?? 'Auccun'}}</p>
         </div>
         <div class="col-md-4 text-right">
             <a href="{{ route('supplier.dashboard', ['supplier_id' => $supplier['name'] ]) }}" class="btn btn-secondary">
