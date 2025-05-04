@@ -388,7 +388,7 @@ class ErpController extends Controller
             ]);
 
 
-             dd($invoices);
+          //       dd($invoices);
             $payments = $this->erpApiService->getResource('Payment Entry', [
                 'party' => $supplier_id,
                 'fields' => [
