@@ -71,7 +71,7 @@
                         </td>
 
                             <td>
-                                <strong>{{ number_format($order['grand_total'] ?? 0, 2) }} {{ $order['currency'] ?? 'EUR' }}</strong>
+                                <strong>{{ number_format($order['grand_total'] ?? 0, 2) }} {{ $order['currency'] ?? '' }}</strong>
                                 @if(isset($order['taxes']) && is_array($order['taxes']) && count($order['taxes']) > 0)
                                     <br><small>Dont taxes: {{ number_format($order['total_taxes_and_charges'] ?? 0, 2) }}</small>
                                 @endif
@@ -160,6 +160,17 @@
                         </tr>
                     @endforelse
                 </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="5" class="text-end"><strong>Total général</strong></td>
+                        <td>
+                            <strong>{{ number_format(collect($orders)->sum('grand_total'), 2) }} {{ $orders[0]['currency'] ?? '' }}</strong>
+                        </td>
+                        <td colspan="4"></td>
+                    </tr>
+                </tfoot>
+
+
             </table>
         </div>
     </div>
