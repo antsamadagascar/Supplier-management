@@ -3,13 +3,13 @@
         <!-- Sidebar à gauche -->
         <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-light sidebar offcanvas offcanvas-start offcanvas-md" tabindex="-1" aria-labelledby="sidebarMenuLabel">
             <div class="offcanvas-header">
-                <h5 class="offcanvas-title" id="sidebarMenuLabel">ERP Management</h5>
+                <h5 class="offcanvas-title" id="sidebarMenuLabel">Suppliers Management</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
             </div>
             <div class="offcanvas-body">
                 <div class="sidebar-header text-center py-4">
                     <img src="{{ asset('logos/erpnext-logo.svg') }}" alt="Logo" class="img-fluid mb-2" style="max-height: 60px;">
-                    <h5 class="mb-0">ERP Management</h5>
+                    <h5 class="mb-0">Suppliers Management</h5>
                 </div>
                 <hr>
                 <div class="position-sticky pt-3">
