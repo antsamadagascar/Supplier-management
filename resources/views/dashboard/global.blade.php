@@ -2,58 +2,58 @@
 
 @section('content')
 <div class="container-fluid px-4">
-    <h1 class="mt-4">Dashboard  Fournisseurs</h1>
+    <h1 class="mt-4">Dashboard Fournisseurs</h1>
     
     <!-- Filtres -->
-        <div class="card mb-4">
-            <div class="card-header bg-primary text-white">
-                <i class="fas fa-filter me-1"></i>
-                Filtres
-            </div>
-            <div class="card-body">
-                <form action="{{ route('dashboard') }}" method="GET" class="row g-3">
-                    <div class="col-md-3">
-                        <label class="form-label">Type de filtre</label>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="filter_type" id="year_filter" value="year" {{ $filterType == 'year' ? 'checked' : '' }}>
-                            <label class="form-check-label" for="year_filter">
-                                Par année
-                            </label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="filter_type" id="custom_filter" value="custom" {{ $filterType == 'custom' ? 'checked' : '' }}>
-                            <label class="form-check-label" for="custom_filter">
-                                Période personnalisée
-                            </label>
-                        </div>
-                    </div>
-                    
-                    <div class="col-md-3" id="year_selector" {{ $filterType == 'custom' ? 'style=display:none' : '' }}>
-                        <label for="year" class="form-label">Année</label>
-                        <select class="form-select" id="year" name="year">
-                            @foreach($years as $y)
-                                <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>{{ $y }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    
-                    <div class="col-md-3" id="date_range" {{ $filterType == 'year' ? 'style=display:none' : '' }}>
-                        <label for="start_date" class="form-label">Date de début</label>
-                        <input type="date" class="form-control" id="start_date" name="start_date" value="{{ $startDate ?? '' }}">
-                    </div>
-                    
-                    <div class="col-md-3" id="date_range_end" {{ $filterType == 'year' ? 'style=display:none' : '' }}>
-                        <label for="end_date" class="form-label">Date de fin</label>
-                        <input type="date" class="form-control" id="end_date" name="end_date" value="{{ $endDate ?? '' }}">
-                    </div>
-                    
-                    <div class="col-12">
-                        <button type="submit" class="btn btn-primary">Appliquer les filtres</button>
-                        <a href="{{ route('dashboard') }}" class="btn btn-secondary">Réinitialiser</a>
-                    </div>
-                </form>
-            </div>
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <i class="fas fa-filter me-1"></i>
+            Filtres
         </div>
+        <div class="card-body">
+            <form action="{{ route('dashboard') }}" method="GET" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Type de filtre</label>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="filter_type" id="year_filter" value="year" {{ $filterType == 'year' ? 'checked' : '' }}>
+                        <label class="form-check-label" for="year_filter">
+                            Par année
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="filter_type" id="custom_filter" value="custom" {{ $filterType == 'custom' ? 'checked' : '' }}>
+                        <label class="form-check-label" for="custom_filter">
+                            Période personnalisée
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="col-md-3" id="year_selector" {{ $filterType == 'custom' ? 'style=display:none' : '' }}>
+                    <label for="year" class="form-label">Année</label>
+                    <select class="form-select" id="year" name="year">
+                        @foreach($years as $y)
+                            <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>{{ $y }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                
+                <div class="col-md-3" id="date_range" {{ $filterType == 'year' ? 'style=display:none' : '' }}>
+                    <label for="start_date" class="form-label">Date de début</label>
+                    <input type="date" class="form-control" id="start_date" name="start_date" value="{{ $startDate ?? '' }}">
+                </div>
+                
+                <div class="col-md-3" id="date_range_end" {{ $filterType == 'year' ? 'style=display:none' : '' }}>
+                    <label for="end_date" class="form-label">Date de fin</label>
+                    <input type="date" class="form-control" id="end_date" name="end_date" value="{{ $endDate ?? '' }}">
+                </div>
+                
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">Appliquer les filtres</button>
+                    <a href="{{ route('dashboard') }}" class="btn btn-secondary">Réinitialiser</a>
+                </div>
+            </form>
+        </div>
+    </div>
     
     <!-- KPIs -->
     <div class="row mb-4">
@@ -122,28 +122,34 @@
         </div>
     </div>
     
-    <!-- Graphiques -->
+    <!-- Section des graphiques -->
     <div class="row mb-4">
-        <div class="col-xl-8">
-            <div class="card mb-4">
+        <!-- Graphique à barres pour les montants par fournisseur -->
+        <div class="col-xl-8 col-lg-7 col-md-12">
+            <div class="card chart-card mb-4">
                 <div class="card-header bg-primary text-white">
                     <i class="fas fa-chart-bar me-1"></i>
-                    Montants par fournisseur (Top 10)
+                    Montants par fournisseur
                 </div>
                 <div class="card-body">
-                    <canvas id="supplierBarChart" height="300"></canvas>
+                    <div class="chart-container">
+                        <canvas id="supplierBarChart" class="chart-responsive"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
         
-        <div class="col-xl-4">
-            <div class="card mb-4">
-                <div class="card-header bg-success text-white">
+        <!-- Graphique camembert pour le statut des factures -->
+        <div class="col-xl-4 col-lg-5 col-md-12">
+            <div class="card chart-card mb-4">
+                <div class="card-header bg-primary text-white">
                     <i class="fas fa-chart-pie me-1"></i>
                     Statut des factures
                 </div>
                 <div class="card-body">
-                    <canvas id="invoicePieChart" height="300"></canvas>
+                    <div class="chart-container">
+                        <canvas id="invoicePieChart" class="chart-responsive"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
@@ -215,89 +221,134 @@
         document.getElementById('date_range_end').style.display = 'block';
     });
     
-    // Graphique à barres pour les montants par fournisseur
-    const supplierData = @json($dashboardData['chart_data']['orders_by_supplier'] ?? []);
+    // Référence globale pour les graphiques
+    let barChart = null;
+    let pieChart = null;
     
-    const barChart = new Chart(document.getElementById('supplierBarChart'), {
-        type: 'bar',
-        data: {
-            labels: supplierData.map(item => item.name),
-            datasets: [
-                {
-                    label: 'Commandes',
-                    data: supplierData.map(item => item.commandes ?? 0),
-                    backgroundColor: 'rgba(54, 162, 235, 0.6)',
-                    borderColor: 'rgba(54, 162, 235, 1)',
-                    borderWidth: 1
+    // Fonction pour redimensionner les graphiques
+    function resizeCharts() {
+        if (barChart) {
+            barChart.resize();
+        }
+        if (pieChart) {
+            pieChart.resize();
+        }
+    }
+    
+    // Créer les graphiques après que le DOM soit complètement chargé
+    document.addEventListener('DOMContentLoaded', function() {
+        // Vérifier si les données existent
+        const supplierData = @json($dashboardData['chart_data']['orders_by_supplier'] ?? []);
+        const invoiceData = @json($dashboardData['chart_data']['invoice_status'] ?? []);
+        
+        // S'assurer que l'élément canvas existe
+        const barCanvas = document.getElementById('supplierBarChart');
+        const pieCanvas = document.getElementById('invoicePieChart');
+        
+        // Initialiser les graphiques seulement si les éléments canvas existent
+        if (barCanvas) {
+            const barCtx = barCanvas.getContext('2d');
+            barChart = new Chart(barCtx, {
+                type: 'bar',
+                data: {
+                    labels: supplierData.map(item => item.name),
+                    datasets: [
+                        {
+                            label: 'Commandes',
+                            data: supplierData.map(item => item.commandes ?? 0),
+                            backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Factures',
+                            data: supplierData.map(item => item.factures ?? 0),
+                            backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Devis',
+                            data: supplierData.map(item => item.devis ?? 0),
+                            backgroundColor: 'rgba(255, 206, 86, 0.6)',
+                            borderColor: 'rgba(255, 206, 86, 1)',
+                            borderWidth: 1
+                        }
+                    ]
                 },
-                {
-                    label: 'Factures',
-                    data: supplierData.map(item => item.factures ?? 0),
-                    backgroundColor: 'rgba(75, 192, 192, 0.6)',
-                    borderColor: 'rgba(75, 192, 192, 1)',
-                    borderWidth: 1
-                },
-                {
-                    label: 'Devis',
-                    data: supplierData.map(item => item.devis ?? 0),
-                    backgroundColor: 'rgba(255, 206, 86, 0.6)',
-                    borderColor: 'rgba(255, 206, 86, 1)',
-                    borderWidth: 1
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    title: {
-                        display: true,
-                        text: 'Montant (€)'
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Montant (€)'
+                            }
+                        }
                     }
                 }
-            }
+            });
         }
-    });
-    
-    // Graphique camembert pour le statut des factures
-    const invoiceData = @json($dashboardData['chart_data']['invoice_status'] ?? []);
-    
-    const pieChart = new Chart(document.getElementById('invoicePieChart'), {
-        type: 'pie',
-        data: {
-            labels: invoiceData.map(item => item.name),
-            datasets: [{
-                data: invoiceData.map(item => item.value),
-                backgroundColor: [
-                    'rgba(75, 192, 192, 0.6)',
-                    'rgba(255, 99, 132, 0.6)'
-                ],
-                borderColor: [
-                    'rgba(75, 192, 192, 1)',
-                    'rgba(255, 99, 132, 1)'
-                ],
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    position: 'bottom'
+        
+        if (pieCanvas) {
+            const pieCtx = pieCanvas.getContext('2d');
+            pieChart = new Chart(pieCtx, {
+                type: 'pie',
+                data: {
+                    labels: invoiceData.map(item => item.name),
+                    datasets: [{
+                        data: invoiceData.map(item => item.value),
+                        backgroundColor: [
+                            'rgba(75, 192, 192, 0.6)',
+                            'rgba(255, 99, 132, 0.6)'
+                        ],
+                        borderColor: [
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(255, 99, 132, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
                 }
-            }
+            });
+        }
+        
+        // Initialiser DataTable
+        if (typeof $.fn.DataTable !== 'undefined') {
+            $('#suppliersTable').DataTable({
+                language: {
+                    url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/fr-FR.json'
+                },
+                order: [[1, 'desc']] // Tri par défaut sur le montant total des commandes
+            });
         }
     });
     
-    // DataTable pour le tableau des fournisseurs
-    $(document).ready(function() {
-        $('#suppliersTable').DataTable({
-            language: {
-                url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/fr-FR.json'
-            },
-            order: [[1, 'desc']] // Tri par défaut sur le montant total des commandes
-        });
+    // Gestionnaire d'événement pour le redimensionnement de la fenêtre
+    window.addEventListener('resize', function() {
+        // Débounce pour éviter trop d'appels pendant le redimensionnement
+        if (window.resizeTimer) {
+            clearTimeout(window.resizeTimer);
+        }
+        window.resizeTimer = setTimeout(function() {
+            // Forcer le redimensionnement des graphiques
+            if (barChart && typeof barChart.update === 'function') {
+                barChart.update();
+            }
+            if (pieChart && typeof pieChart.update === 'function') {
+                pieChart.update();
+            }
+        }, 250);
     });
 </script>
 @endsection

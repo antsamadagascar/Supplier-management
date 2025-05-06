@@ -112,6 +112,7 @@
                             <th>Facture</th>
                             <th>Montant</th>
                             <th>Mode de paiement</th>
+                            <th>Reference Factures</th>
                             <th>Statut</th>
                         </tr>
                     </thead>
@@ -124,10 +125,20 @@
                                 <td>{{ number_format($payment['paid_amount'] ?? 0, 2, ',', ' ') }} {{ $payment['paid_from_account_currency']  }}</td>
                                 <td>{{ $payment['mode_of_payment'] ?? '—' }}</td>
                                 <td>
-                                    <span class="badge {{ $payment['docstatus'] == 1 ? 'badge-success' : 'badge-secondary' }}">
-                                        {{ $payment['docstatus'] == 1 ? 'Validé' : 'Brouillon' }}
-                                    </span>
+                                    @if(!empty($payment['references']) && isset($payment['references'][0]['reference_name']))
+                                        {{ $payment['references'][0]['reference_name'] }}
+                                    @else
+                                        {{ $payment['reference_name'] ?? '—' }}
+                                    @endif
                                 </td>
+
+                                <td>
+                                <span class="badge {{ $payment['docstatus'] == 1 ? 'bg-success' : 'bg-secondary' }}">
+                                    {{ $payment['docstatus'] == 1 ? 'Validé' : 'Brouillon' }}
+                                </span>
+
+                                </td>
+
                             </tr>
                         @empty
                             <tr>

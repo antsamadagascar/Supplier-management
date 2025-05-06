@@ -8,4 +8,4 @@ DELETE FROM `tabSupplier`;
 DELETE FROM `tabItem`;
 DELETE FROM `tabSupplier Group`;
 DELETE FROM `tabItem Group`;
-DELETE FROM`tabMaterial Request Item`
+DELETE FROM`tabMaterial Request Item`;

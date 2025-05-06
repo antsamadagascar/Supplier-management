@@ -158,7 +158,36 @@ class ErpController extends Controller
             return $quotation;
         }, $quotations);
     }
+    public function quotations(string $supplier_id)
+{
+    try {
+        $supplier = $this->erpApiService->getResource("Supplier/{$supplier_id}");
+        $quotations = $this->erpApiService->getList("Supplier Quotation", ["supplier" => $supplier_id]);
+        
+        // Loguer les données brutes
+        Log::info('Données des devis pour fournisseur ' . $supplier_id, ['quotations' => $quotations]);
 
+        // Vérifier si $quotations est bien formé
+        if (!isset($quotations['data']) || !is_array($quotations['data'])) {
+            Log::warning('Données des devis mal formées', ['quotations' => $quotations]);
+            $quotations = ['data' => []];
+        }
+
+        // Vérifier les doublons
+        $quotationNames = array_column($quotations['data'], 'name');
+        if (count($quotationNames) !== count(array_unique($quotationNames))) {
+            Log::warning('Doublons détectés dans les devis', ['names' => $quotationNames]);
+        }
+
+        return view('suppliers.quotations', [
+            'supplier' => $supplier,
+            'quotations' => $quotations['data'],
+        ]);
+    } catch (Exception $e) {
+        Log::error('Erreur API Quotations: ' . $e->getMessage(), ['supplier_id' => $supplier_id]);
+        return back()->with('error', 'Erreur lors de la récupération des devis.');
+    }
+}
     public function quotationItems(string $supplier_id, string $quotation_id)
     {
         try {
@@ -206,9 +235,9 @@ class ErpController extends Controller
                 }
     
                 try {
-                    $itemDetails = $this->erpApiService->getResource("Supplier Quotation Item/{$item_id}");
-                    $item_code = $itemDetails['item_code'] ?? null;
-    
+                    $itemDetails = $this->erpApiService->getResource("Supplier Quotation Item/{$quotation_id}");
+                    $item_code = $itemDetails['name'] ?? null;
+                
                     if (!$item_code || !$this->erpApiService->resourceExists("Item/{$item_code}")) {
                         $errors[] = $item_code ? 
                             "L'article avec le code {$item_code} n'existe pas." :
@@ -437,7 +466,7 @@ class ErpController extends Controller
                 $payment['paid_amount'] = $payment['paid_amount'] ?? 0;
                 return $payment;
             }, $payments);
-
+         //   dd($payments);
             return view('suppliers.accounting', compact('invoices', 'payments', 'supplier'));
         } catch (Exception $e) {
             Log::error('Erreur API Supplier Accounting', [

@@ -75,14 +75,14 @@ class DashboardController extends Controller
                         'paid_invoices' => $supplierStats['invoices_count'] - $supplierStats['unpaid_invoices']
                     ];
                 }
-         //       DD($dashboardData['suppliers_data']);
+//     DD($dashboardData['suppliers_data']);
         //        // Tri par total des commandes
                 usort($dashboardData['suppliers_data'], fn($a, $b) => $b['orders_total'] <=> $a['orders_total']);
             }
 
             // Préparation des données pour les graphiques
             $dashboardData['chart_data'] = $this->prepareChartData($dashboardData['suppliers_data']);
-
+          //     dd($dashboardData['chart_data'] );
             // Liste des années pour le filtre
             $years = range(date('Y') - 5, date('Y'));
 

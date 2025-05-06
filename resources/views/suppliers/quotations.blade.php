@@ -69,9 +69,9 @@
                                     </button>
                                 </td>
                                 <td>
-                                    <a href="{{ route('supplier.quotation.items', ['supplier_id' => $supplier['name'], 'quotation_id' => $quotation['name']]) }}" class="btn btn-sm btn-primary">
-                                        <i class="fas fa-pencil-alt"></i> Mettre à jour les prix
-                                    </a>
+                                <a href="{{ route('supplier.quotation.items', ['supplier_id' => $supplier['name'], 'quotation_id' => $quotation['name']]) }}" class="btn btn-sm btn-secondary">
+        <i class="fas fa-pencil-alt"></i> Mettre à jour tous les prix
+    </a>
                                 </td>
                             </tr>
 
