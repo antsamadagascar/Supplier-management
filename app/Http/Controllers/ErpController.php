@@ -210,46 +210,46 @@ class ErpController extends Controller
     public function updateQuotation(Request $request, string $supplier_id, string $quotation_id)
     {
         try {
-            $items = $request->input('items', []);
+            $items= $request->input('items', []);
             if (empty($items) || !is_array($items)) {
                 return back()->with('error', 'Données de mise à jour invalides.');
             }
-    
+
             $quotation = $this->erpApiService->getResource("Supplier Quotation/{$quotation_id}");
             if ($quotation['status'] !== 'Draft') {
                 return back()->with('error', 'Le devis doit être en état "Draft" pour pouvoir modifier les prix.');
             }
-    
+
             $updatedItems = [];
             $errors = [];
-    
+
             foreach ($items as $index => $itemData) {
                 $item_id = $itemData['item_row'] ?? null;
                 $new_rate = (float) ($itemData['new_rate'] ?? 0);
-    
+
                 if (!$item_id || $new_rate <= 0) {
                     $errors[] = $item_id ? 
                         "Le prix pour l'article {$item_id} doit être supérieur à 0." :
                         "Données manquantes pour l'article à l'index $index";
                     continue;
                 }
-    
+
                 try {
-                    $itemDetails = $this->erpApiService->getResource("Supplier Quotation Item/{$quotation_id}");
-                    $item_code = $itemDetails['name'] ?? null;
-                
+                    $itemDetails = $this->erpApiService->getResource("Supplier Quotation Item/{$item_id}");
+                    $item_code = $itemDetails['item_code'] ?? null;
+
                     if (!$item_code || !$this->erpApiService->resourceExists("Item/{$item_code}")) {
                         $errors[] = $item_code ? 
                             "L'article avec le code {$item_code} n'existe pas." :
                             "Code article introuvable pour l'article {$item_id}.";
                         continue;
                     }
-    
+
                     $this->erpApiService->updateResource("Supplier Quotation Item/{$item_id}", [
                         'rate' => $new_rate,
                         'item_code' => $item_code
                     ]);
-    
+
                     $updatedItems[] = $item_id;
                 } catch (Exception $e) {
                     $errors[] = "Erreur lors de la mise à jour de l'article {$item_id}: " . $e->getMessage();
@@ -259,20 +259,21 @@ class ErpController extends Controller
                     ]);
                 }
             }
-    
+
             if (!empty($errors)) {
                 return back()->with('error', implode('<br>', $errors));
             }
-    
+
             if (empty($updatedItems)) {
                 return back()->with('error', 'Aucun article n\'a été mis à jour.');
             }
-    
+
             return redirect()
                 ->route('supplier.quotation.items', ['supplier_id' => $supplier_id, 'quotation_id' => $quotation_id])
                 ->with('success', count($updatedItems) > 1
                     ? 'Les prix de ' . count($updatedItems) . ' articles ont été mis à jour avec succès.'
                     : 'Le prix a été mis à jour avec succès.');
+
         } catch (Exception $e) {
             Log::error('Erreur API Update Quotation: ' . $e->getMessage());
             return back()->with('error', 'Erreur lors de la mise à jour des prix.');
@@ -399,7 +400,7 @@ class ErpController extends Controller
                 $detailedOrders[] = $detailedOrder;
             } catch (Exception $e) {
                 Log::warning("Failed to fetch order details for {$order['name']}", ['message' => $e->getMessage()]);
-                $detailedOrders[] = $order; // Include partial data
+                $detailedOrders[] = $order; 
             }
         }
 

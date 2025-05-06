@@ -34,7 +34,7 @@
                         <th>Statut</th>
                         <th>Montant payé</th>
                         <th>Devise</th>
-                        <!-- <th>Actions</th> -->
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -66,13 +66,13 @@
                             <td>{{ number_format($invoice['paid_amount'] ?? 0, 2, ',', ' ') }}</td>
                             <td>{{ $invoice['currency'] ?? '—' }}</td>
                                                        
-                            <!-- <td>
+                            <td>
                                 @if($invoice['status'] !== 'Paid')
                                     <a href="{{ route('invoices.showPayForm', ['invoice_id' => $invoice['name']]) }}" class="btn btn-sm btn-outline-primary">Régler</a>
                                 @else
                                     <span class="text-muted">Payée</span>
                                 @endif
-                            </td> -->
+                            </td>
                         </tr>
                     @empty
                         <tr>
