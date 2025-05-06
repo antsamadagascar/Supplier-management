@@ -210,7 +210,7 @@ class ErpController extends Controller
     public function updateQuotation(Request $request, string $supplier_id, string $quotation_id)
     {
         try {
-            $items= $request->input('items', []);
+            $items = $request->input('items', []);
             if (empty($items) || !is_array($items)) {
                 return back()->with('error', 'Données de mise à jour invalides.');
             }
@@ -268,18 +268,28 @@ class ErpController extends Controller
                 return back()->with('error', 'Aucun article n\'a été mis à jour.');
             }
 
+            // Valider automatiquement la quotation en état "Submitted"
+            try {
+                $this->erpApiService->updateResource("Supplier Quotation/{$quotation_id}", [
+                    'status' => 'Submitted'
+                ]);
+            } catch (Exception $e) {
+                Log::error('Erreur lors de la validation de la quotation: ' . $e->getMessage());
+                return back()->with('error', 'Erreur lors de la validation automatique du devis.');
+            }
+
             return redirect()
                 ->route('supplier.quotation.items', ['supplier_id' => $supplier_id, 'quotation_id' => $quotation_id])
                 ->with('success', count($updatedItems) > 1
-                    ? 'Les prix de ' . count($updatedItems) . ' articles ont été mis à jour avec succès.'
-                    : 'Le prix a été mis à jour avec succès.');
+                    ? 'Les prix de ' . count($updatedItems) . ' articles ont été mis à jour et le devis a été validé avec succès.'
+                    : 'Le prix a été mis à jour et le devis a été validé avec succès.');
 
         } catch (Exception $e) {
             Log::error('Erreur API Update Quotation: ' . $e->getMessage());
             return back()->with('error', 'Erreur lors de la mise à jour des prix.');
         }
     }
-    
+        
 
     public function supplierOrders(string $supplier_id)
     {
