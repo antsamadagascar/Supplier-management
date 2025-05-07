@@ -44,5 +44,4 @@ Route::middleware([\App\Http\Middleware\FrappeAuthMiddleware::class])->group(fun
 
     Route::get('/invoices/{invoice_id}/pay', [InvoiceController::class, 'showPayInvoice'])->name('invoices.showPayForm');
     Route::post('/invoices/pay', [InvoiceController::class, 'payInvoice'])->name('invoices.pay');
-
 });

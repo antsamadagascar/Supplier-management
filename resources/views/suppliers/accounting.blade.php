@@ -32,65 +32,86 @@
                         <th>Montant</th>
                         <th>Commande</th>
                         <th>Statut</th>
-                        <th>Montant payé</th>
+                        <!-- <th>Montant payé</th> -->
                         <th>Devise</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @php
-                        $totalMontant = 0;
-                        $totalPaye = 0;
-                    @endphp
+                @php
+                $totalMontant = 0;
+                $totauxParStatut = [
+                    'Paid' => 0,
+                    'Unpaid' => 0,
+                    'Partially Paid' => 0
+                ];
+            @endphp
 
-                    @forelse($invoices as $invoice)
-                        @php
-                            $totalMontant += $invoice['amount'] ?? 0;
-                            $totalPaye += $invoice['paid_amount'] ?? 0;
-                        @endphp
-                        <tr>
-                            <td>{{ $invoice['name'] ?? 'N/A' }}</td>
-                            <td>{{ isset($invoice['posting_date']) ? \Carbon\Carbon::parse($invoice['posting_date'])->format('d/m/Y') : 'N/A' }}</td>
-                            <td>{{ $invoice['item_code'] ?? 'N/A' }}</td>
-                            <td>{{ number_format($invoice['qty'] ?? 0, 2, ',', ' ') }}</td>
-                            <td>{{ number_format($invoice['rate'] ?? 0, 2, ',', ' ') }}</td>
-                            <td>{{ number_format($invoice['amount'] ?? 0, 2, ',', ' ') }}</td>
-                            <td>{{ $invoice['purchase_order'] ?? '—' }}</td>
-                            <td>
-                                <span class="badge 
-                                    {{ $invoice['status'] === 'Paid' ? 'bg-success' : 
-                                        ($invoice['status'] === 'Unpaid' ? 'bg-danger' : 'bg-warning') }}">
-                                    {{ $invoice['status'] ?? '—' }}
-                                </span>
-                            </td>
-                            <td>{{ number_format($invoice['paid_amount'] ?? 0, 2, ',', ' ') }}</td>
-                            <td>{{ $invoice['currency'] ?? '—' }}</td>
-                                                       
-                            <td>
-                                @if($invoice['status'] !== 'Paid')
-                                    <a href="{{ route('invoices.showPayForm', ['invoice_id' => $invoice['name']]) }}" class="btn btn-sm btn-outline-primary">Régler</a>
-                                @else
-                                    <span class="text-muted">Payée</span>
-                                @endif
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="11" class="text-center">Aucune facture trouvée pour ce fournisseur</td>
-                        </tr>
-                    @endforelse
+            @forelse($invoices as $invoice)
+                @php
+                    $montant = $invoice['amount'] ?? 0;
+                    $statut = $invoice['status'] ?? 'Unpaid';
+                    $totalMontant += $montant;
+                    if (isset($totauxParStatut[$statut])) {
+                        $totauxParStatut[$statut] += $montant;
+                    } else {
+                        $totauxParStatut[$statut] = $montant;
+                    }
+                @endphp
+                <tr>
+                    <td>{{ $invoice['name'] ?? 'N/A' }}</td>
+                    <td>{{ isset($invoice['posting_date']) ? \Carbon\Carbon::parse($invoice['posting_date'])->format('d/m/Y') : 'N/A' }}</td>
+                    <td>{{ $invoice['item_code'] ?? 'N/A' }}</td>
+                    <td>{{ number_format($invoice['qty'] ?? 0, 2, ',', ' ') }}</td>
+                    <td>{{ number_format($invoice['rate'] ?? 0, 2, ',', ' ') }}</td>
+                    <td>{{ number_format($montant, 2, ',', ' ') }}</td>
+                    <td>{{ $invoice['purchase_order'] ?? '—' }}</td>
+                    <td>
+                        <span class="badge 
+                            {{ $statut === 'Paid' ? 'bg-success' : 
+                            ($statut === 'Unpaid' ? 'bg-danger' : 'bg-warning') }}">
+                            {{ $statut }}
+                        </span>
+                    </td>
+                    <td>{{ $invoice['currency'] ?? '—' }}</td>
+                    <td>
+                        @if($statut !== 'Paid')
+                            <a href="{{ route('invoices.showPayForm', ['invoice_id' => $invoice['name']]) }}" class="btn btn-sm btn-outline-primary">Régler</a>
+                        @else
+                            <span class="text-muted">Payée</span>
+                        @endif
+                    </td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="11" class="text-center">Aucune facture trouvée pour ce fournisseur</td>
+                </tr>
+            @endforelse
+
                 </tbody>
-
                 <tfoot>
-                    <tr class="bg-light fw-bold">
-                        <td colspan="5" class="text-end">Totaux</td>
-                        <td>{{ number_format($totalMontant, 2, ',', ' ') }}</td>
-                        <td></td>
-                        <td></td>
-                        <td>{{ number_format($totalPaye, 2, ',', ' ') }}</td>
-                        <td></td>
-                    </tr>
-                </tfoot>
+                <tr class="bg-light fw-bold">
+                    <td colspan="5" class="text-end">Total global</td>
+                    <td>{{ number_format($totalMontant, 2, ',', ' ') }}</td>
+                    <td colspan="4"></td>
+                </tr>
+                <tr>
+                    <td colspan="5" class="text-end text-success">Total payé</td>
+                    <td>{{ number_format($totauxParStatut['Paid'], 2, ',', ' ') }}</td>
+                    <td colspan="4"></td>
+                </tr>
+                <tr>
+                    <td colspan="5" class="text-end text-danger">Total non payé</td>
+                    <td>{{ number_format($totauxParStatut['Unpaid'], 2, ',', ' ') }}</td>
+                    <td colspan="4"></td>
+                </tr>
+                <tr>
+                    <td colspan="5" class="text-end text-warning">Total partiellement payé</td>
+                    <td>{{ number_format($totauxParStatut['Partially Paid'], 2, ',', ' ') }}</td>
+                    <td colspan="4"></td>
+                </tr>
+            </tfoot>
+
             </table>
 
 
