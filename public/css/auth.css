@@ -1,0 +1,219 @@
+/* public/css/auth.css */
+
+:root {
+    --primary-color: #4a69bd;
+    --secondary-color: #6a89cc;
+    --accent-color: #f6b93b;
+    --light-bg: #f5f6fa;
+    --dark-text: #2c3e50;
+    --border-radius: 8px;
+    --card-radius: 15px;
+    --shadow-light: 0 10px 20px rgba(0, 0, 0, 0.1);
+    --transition: all 0.3s ease;
+}
+
+/* Configuration générale du body */
+body {
+    background-color: var(--light-bg);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--dark-text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Container principal */
+.login-container {
+    flex: 1;
+    padding: 2rem 0;
+}
+
+/* Carte personnalisée */
+.custom-card {
+    border-radius: var(--card-radius);
+    overflow: hidden;
+    box-shadow: var(--shadow-light);
+    border: none;
+}
+
+/* En-tête de la carte */
+.custom-header {
+    background-color: var(--primary-color);
+    color: white;
+    font-size: 1.5rem;
+    padding: 1rem;
+    text-align: center;
+    border-bottom: none;
+}
+
+/* Corps de la carte */
+.custom-body {
+    padding: 2rem;
+}
+
+/* Icône de connexion */
+.login-icon {
+    font-size: 3rem;
+    text-align: center;
+    margin-bottom: 1rem;
+    color: var(--primary-color);
+}
+
+/* Champs de saisie personnalisés */
+.custom-input {
+    border-radius: var(--border-radius);
+    padding: 10px 15px;
+    border: 1px solid #dcdde1;
+    transition: var(--transition);
+}
+
+.custom-input:focus {
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 0 0.25rem rgba(74, 105, 189, 0.25);
+}
+
+/* Icônes des champs de saisie */
+.custom-input-icon {
+    border-radius: var(--border-radius) 0 0 var(--border-radius);
+    background-color: #f8f9fa;
+    border-color: #dcdde1;
+}
+
+/* Bouton personnalisé */
+.custom-btn {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    border-radius: var(--border-radius);
+    padding: 10px;
+    font-weight: 600;
+    transition: var(--transition);
+}
+
+.custom-btn:hover {
+    background-color: var(--secondary-color);
+    border-color: var(--secondary-color);
+    transform: translateY(-2px);
+}
+
+.custom-btn:focus {
+    box-shadow: 0 0 0 0.25rem rgba(74, 105, 189, 0.25);
+}
+
+/* Alertes personnalisées */
+.custom-alert {
+    border-radius: var(--border-radius);
+    margin-bottom: 1rem;
+}
+
+/* Cases à cocher personnalisées */
+.form-check-input:checked {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+/* Lien mot de passe oublié */
+.forgot-password {
+    text-align: right;
+    margin-top: 10px;
+}
+
+.forgot-password a {
+    color: var(--secondary-color);
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+.forgot-password a:hover {
+    color: var(--primary-color);
+    text-decoration: underline;
+}
+
+/* Labels des formulaires */
+.form-label {
+    font-weight: 500;
+    color: var(--dark-text);
+    margin-bottom: 0.5rem;
+}
+
+/* Groupes d'input */
+.input-group {
+    margin-bottom: 0.5rem;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .custom-card {
+        border-radius: 0;
+        box-shadow: none;
+        margin: 0;
+    }
+    
+    .login-container {
+        padding: 0;
+    }
+    
+    .custom-body {
+        padding: 1.5rem;
+    }
+    
+    .login-icon {
+        font-size: 2.5rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .custom-header {
+        font-size: 1.25rem;
+        padding: 0.75rem;
+    }
+    
+    .custom-body {
+        padding: 1rem;
+    }
+    
+    .login-icon {
+        font-size: 2rem;
+        margin-bottom: 0.75rem;
+    }
+}
+
+/* Animation au chargement */
+.custom-card {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* États de focus améliorés */
+.custom-input:focus,
+.custom-btn:focus {
+    outline: none;
+}
+
+/* Amélioration de l'accessibilité */
+.custom-btn:focus-visible {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 2px;
+}
+
+/* Styles pour les messages d'erreur */
+.alert ul {
+    padding-left: 1.2rem;
+}
+
+.alert li {
+    margin-bottom: 0.25rem;
+}
+
+.alert li:last-child {
+    margin-bottom: 0;
+}
